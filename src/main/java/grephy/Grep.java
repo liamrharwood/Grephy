@@ -10,15 +10,20 @@ public class Grep {
     private static String nfaFile;
     private static String dfaFile;
 
+    private static String regexString;
+    private static String alphabetFile;
+
     public static void main (String[] args) {
         configureLogger();
 
-        if (args.length < 2) {
+        if (args.length < 2 || args.length > 6) {
             System.out.println(USAGE_MESSAGE);
             System.exit(1);
         }
 
-        for (int i = 0; i < 4 && args[i].charAt(0) == '-'; i++) {
+        // Handle optional arguments specifying NFA and DFA output files
+        int i;
+        for (i = 0; i < 4 && args[i].charAt(0) == '-'; i++) {
             switch (args[i].charAt(1)) {
                 case 'n':
                     if (i + 1 < args.length) {
@@ -44,6 +49,19 @@ public class Grep {
                     System.out.println(USAGE_MESSAGE);
                     System.exit(1);
             }
+        }
+
+        // Handle regex and input file arguments
+        if (i < args.length) {
+            regexString = args[i++];
+            LOGGER.info("Regex: " + regexString);
+        }
+        if (i < args.length) {
+            alphabetFile = args[i];
+            LOGGER.info("Alphabet File: " + alphabetFile);
+        } else {
+            System.out.println(USAGE_MESSAGE);
+            System.exit(1);
         }
     }
 
