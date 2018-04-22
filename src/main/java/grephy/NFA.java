@@ -26,6 +26,6 @@ public class NFA {
             this.states.add(i);
         }
 
-        this.delta.add(new Transition(0, 1, c));
+        this.delta.add(new Transition(0, 1, Optional.of(c)));
     }
 }

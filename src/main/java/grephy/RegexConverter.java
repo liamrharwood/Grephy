@@ -1,6 +1,7 @@
 package grephy;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Stack;
 
 public class RegexConverter {
@@ -13,17 +14,17 @@ public class RegexConverter {
         for (Transition transition : n.delta) {
             result.delta.add(new Transition(transition.stateFrom + 1,
                     transition.stateTo + 1,
-                    transition.symbol.get()));
+                    transition.symbol));
         }
         for (Transition transition : n.deltaE) {
             result.deltaE.add(new Transition(transition.stateFrom + 1,
                     transition.stateTo + 1,
-                    null));
+                    Optional.empty()));
         }
 
-        result.deltaE.add(new Transition(n.states.size(), n.states.size() + 1, null));
-        result.deltaE.add(new Transition(n.states.size(), 1, null));
-        result.deltaE.add(new Transition(0, n.states.size() + 1, null));
+        result.deltaE.add(new Transition(n.states.size(), n.states.size() + 1, Optional.empty()));
+        result.deltaE.add(new Transition(n.states.size(), 1, Optional.empty()));
+        result.deltaE.add(new Transition(0, n.states.size() + 1, Optional.empty()));
 
         return result;
     }
@@ -34,12 +35,12 @@ public class RegexConverter {
         for (Transition transition : m.delta) {
             n.delta.add(new Transition(transition.stateFrom + n.states.size() - 1,
                     transition.stateTo + n.states.size() - 1,
-                    transition.symbol.get()));
+                    transition.symbol));
         }
         for (Transition transition : m.deltaE) {
             n.deltaE.add(new Transition(transition.stateFrom + n.states.size() - 1,
                     transition.stateTo + n.states.size() - 1,
-                    null));
+                    Optional.empty()));
         }
 
         for (Integer state : m.states) {
@@ -52,36 +53,36 @@ public class RegexConverter {
     private static NFA union(NFA n, NFA m) {
         NFA result = new NFA(n.states.size() + m.states.size() + 2);
 
-        result.deltaE.add(new Transition(0, 1, null));
+        result.deltaE.add(new Transition(0, 1, Optional.empty()));
 
         for (Transition transition : n.delta) {
             result.delta.add(new Transition(transition.stateFrom + 1,
                     transition.stateTo + 1,
-                    transition.symbol.get()));
+                    transition.symbol));
         }
         for (Transition transition : n.deltaE) {
             result.deltaE.add(new Transition(transition.stateFrom + 1,
                     transition.stateTo + 1,
-                    null));
+                    Optional.empty()));
         }
 
-        result.deltaE.add(new Transition(n.states.size(), n.states.size() + m.states.size() + 1, null));
-        result.deltaE.add(new Transition(0, n.states.size() + 1, null));
+        result.deltaE.add(new Transition(n.states.size(), n.states.size() + m.states.size() + 1, Optional.empty()));
+        result.deltaE.add(new Transition(0, n.states.size() + 1, Optional.empty()));
 
         for (Transition transition : m.delta) {
             result.delta.add(new Transition(transition.stateFrom + n.states.size() + 1,
                     transition.stateTo + n.states.size() + 1,
-                    transition.symbol.get()));
+                    transition.symbol));
         }
         for (Transition transition : m.deltaE) {
             result.deltaE.add(new Transition(transition.stateFrom + n.states.size() + 1,
                     transition.stateTo + n.states.size() + 1,
-                    null));
+                    Optional.empty()));
         }
 
         result.deltaE.add(new Transition(m.states.size() + n.states.size(),
                 m.states.size() + n.states.size() + 1,
-                null));
+                Optional.empty()));
 
         return result;
     }

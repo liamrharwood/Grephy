@@ -7,9 +7,9 @@ public class Transition {
     public int stateTo;
     public Optional<Character> symbol;
 
-    public Transition(int stateFrom, int stateTo, Character symbol) {
+    public Transition(int stateFrom, int stateTo, Optional<Character> symbol) {
         this.stateFrom = stateFrom;
         this.stateTo = stateTo;
-        this.symbol = Optional.of(symbol);
+        this.symbol = symbol;
     }
 }
