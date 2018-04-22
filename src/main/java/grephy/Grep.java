@@ -88,7 +88,7 @@ public class Grep {
                 }
             }
         }
-        
+
     }
 
     private static void configureLogger() {
