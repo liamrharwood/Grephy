@@ -89,6 +89,9 @@ public class Grep {
             }
         }
 
+        NFA nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
+
+        System.out.println("DONE");
     }
 
     private static void configureLogger() {

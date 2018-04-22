@@ -1,33 +1,31 @@
 package grephy;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class NFA {
-    private int stateSet;
+    public ArrayList<Integer> states;
+    public ArrayList<Transition> delta;
+    public ArrayList<Transition> deltaE;
 
-    private List<Map<Character, Integer>> deltaFunction;
+    public NFA(int numStates) {
+        this.states = new ArrayList();
+        this.delta = new ArrayList();
+        this.deltaE = new ArrayList();
 
-    public void reset() {
-        stateSet = 1 << 0;
+        for (int i = 0; i < numStates; i++) {
+            this.states.add(i);
+        }
     }
 
-    public void process (String inputStr) {
-        for (int i = 0; i < inputStr.length(); i++) {
-            char c = inputStr.charAt(i);
-            int nextStateSet = 0;
-            for (int state = 0; state < deltaFunction.size(); state++) {
-                if ((stateSet & (1 << state)) != 0) {
-                    Optional<Integer> maybeState = Optional.of(deltaFunction.get(state).get(c));
-                    if (maybeState.isPresent()) {
-                        nextStateSet |= maybeState.get();
-                    } else {
-                        System.out.println("Invalid alphabet symbol.");
-                    }
-                }
-            }
-            stateSet = nextStateSet;
+    public NFA(char c) {
+        this.states = new ArrayList();
+        this.delta = new ArrayList();
+        this.deltaE = new ArrayList();
+
+        for (int i = 0; i < 2; i++) {
+            this.states.add(i);
         }
+
+        this.delta.add(new Transition(0, 1, c));
     }
 }
