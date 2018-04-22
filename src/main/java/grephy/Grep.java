@@ -2,6 +2,12 @@ package grephy;
 
 import org.apache.log4j.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Grep {
     private static final Logger LOGGER = Logger.getLogger(Grep.class);
 
@@ -11,7 +17,10 @@ public class Grep {
     private static String dfaFile;
 
     private static String regexString;
-    private static String alphabetFile;
+    private static String inputFile;
+
+    private static List<String> inputFileLines;
+    private static List<Character> alphabetList;
 
     public static void main (String[] args) {
         configureLogger();
@@ -57,12 +66,29 @@ public class Grep {
             LOGGER.info("Regex: " + regexString);
         }
         if (i < args.length) {
-            alphabetFile = args[i];
-            LOGGER.info("Alphabet File: " + alphabetFile);
+            inputFile = args[i];
+            LOGGER.info("Alphabet File: " + inputFile);
         } else {
             System.out.println(USAGE_MESSAGE);
             System.exit(1);
         }
+
+        try {
+            inputFileLines = Files.readAllLines(Paths.get(inputFile));
+        } catch (IOException e) {
+            LOGGER.error(e);
+            System.exit(1);
+        }
+
+        alphabetList = new ArrayList();
+        for (String line : inputFileLines) {
+            for (char symbol : line.toCharArray()) {
+                if (!alphabetList.contains(symbol)) {
+                    alphabetList.add(symbol);
+                }
+            }
+        }
+        
     }
 
     private static void configureLogger() {
