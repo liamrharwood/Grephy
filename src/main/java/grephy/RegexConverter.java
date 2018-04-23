@@ -107,7 +107,7 @@ public class RegexConverter {
                 }
             } else {
                 if (c == ')') {
-                    shouldConcat = false;
+                    shouldConcat = true;
                     if (numParentheses == 0) {
                         // error
                         System.exit(1);
@@ -144,8 +144,12 @@ public class RegexConverter {
                     operands.push(kleeneStar(operands.pop()));
                     shouldConcat = true;
                 } else if (c == '(') {
+                    if (operands.size() > 0) {
+                        operators.push('.');
+                    }
                     operators.push(c);
                     numParentheses++;
+                    shouldConcat = false;
                 } else if (c == '|') {
                     operators.push(c);
                     shouldConcat = false;
