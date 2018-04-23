@@ -1,3 +1,5 @@
-ababa
-bbbaaa
-ababa
+a
+aba
+aaa
+abba
+aaaaa

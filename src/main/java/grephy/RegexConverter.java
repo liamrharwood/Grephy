@@ -26,6 +26,7 @@ public class RegexConverter {
         result.deltaE.add(new Transition(n.states.size(), 1, Optional.empty()));
         result.deltaE.add(new Transition(0, n.states.size() + 1, Optional.empty()));
 
+        result.acceptingState = result.states.size() - 1;
         return result;
     }
 
@@ -47,6 +48,7 @@ public class RegexConverter {
             n.states.add(state + n.states.size() + 1);
         }
 
+        n.acceptingState = n.states.size() - 1;
         return n;
     }
 
@@ -84,6 +86,7 @@ public class RegexConverter {
                 m.states.size() + n.states.size() + 1,
                 Optional.empty()));
 
+        result.acceptingState = result.states.size() - 1;
         return result;
     }
 

@@ -91,7 +91,11 @@ public class Grep {
 
         NFA nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
 
-        System.out.println("DONE");
+        for (String line : inputFileLines) {
+            if (nfa.accepts(line)) {
+                System.out.println(line);
+            }
+        }
     }
 
     private static void configureLogger() {
