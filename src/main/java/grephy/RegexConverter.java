@@ -9,7 +9,8 @@ public class RegexConverter {
     private static NFA kleeneStar(NFA n) {
         NFA result = new NFA(n.states.size() + 2);
 
-        result.deltaE.add(new Transition(0, 1, null));
+        result.deltaE.add(new Transition(0, 1, Optional.empty()
+        ));
 
         for (Transition transition : n.delta) {
             result.delta.add(new Transition(transition.stateFrom + 1,
@@ -147,7 +148,7 @@ public class RegexConverter {
                     operands.push(kleeneStar(operands.pop()));
                     shouldConcat = true;
                 } else if (c == '(') {
-                    if (operands.size() > 0) {
+                    if (operands.size() > 0 && i < regex.length()-1 && regex.charAt(i + 1) != '(') {
                         operators.push('.');
                     }
                     operators.push(c);

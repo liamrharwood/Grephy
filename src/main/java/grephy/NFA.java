@@ -34,6 +34,12 @@ public class NFA {
 
     public boolean accepts(int state, String inputStr, int pos) {
         if (pos == inputStr.length()) {
+            List<Transition> transitions = new ArrayList(deltaE);
+            transitions.removeIf(t -> t.stateFrom != state);
+            for (int i = 0; i < transitions.size(); i++) {
+                if (accepts(transitions.get(i).stateTo, inputStr, pos))
+                    return true;
+            }
             return state == acceptingState;
         }
 
