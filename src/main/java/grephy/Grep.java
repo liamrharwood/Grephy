@@ -2,7 +2,9 @@ package grephy;
 
 import org.apache.log4j.*;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -13,8 +15,8 @@ public class Grep {
 
     private static final String USAGE_MESSAGE = "Usage: java grephy.Grep [-n NFA-FILE] [-d DFA-FILE] REGEX FILE";
 
-    private static String nfaFile;
-    private static String dfaFile;
+    private static String nfaFile = "";
+    private static String dfaFile = "";
 
     private static String regexString;
     private static String inputFile;
@@ -94,6 +96,18 @@ public class Grep {
         for (String line : inputFileLines) {
             if (nfa.accepts(line)) {
                 System.out.println(line);
+            }
+        }
+
+        if (nfaFile.length() > 0) {
+            try {
+                PrintWriter nfaOut = new PrintWriter(nfaFile);
+                for (String line : nfa.toDotFile()) {
+                    nfaOut.println(line);
+                }
+                nfaOut.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
         }
     }

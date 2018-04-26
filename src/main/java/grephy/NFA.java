@@ -65,4 +65,18 @@ public class NFA {
     public boolean accepts(String inputStr) {
         return accepts (0, inputStr, 0);
     }
+
+    public List<String> toDotFile() {
+        List<String> result = new ArrayList();
+        result.add("digraph G {");
+        for (Transition t : delta) {
+            result.add(t.stateFrom + " -> " + t.stateTo + " [label=" + t.symbol.get() + "];");
+        }
+        for (Transition t : deltaE) {
+            result.add(t.stateFrom + " -> " + t.stateTo + " [label=\"&epsilon;\"];");
+        }
+        result.add("}");
+
+        return result;
+    }
 }
