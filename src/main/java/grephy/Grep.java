@@ -99,6 +99,9 @@ public class Grep {
             }
         }
 
+        nfa.removeEpsilons();
+        //DFA dfa = new DFA(nfa, alphabetList);
+
         if (nfaFile.length() > 0) {
             try {
                 PrintWriter nfaOut = new PrintWriter(nfaFile);

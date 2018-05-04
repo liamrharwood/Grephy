@@ -1,18 +1,16 @@
 package grephy;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class NFA {
-    public ArrayList<Integer> states;
-    public ArrayList<Transition> delta;
-    public ArrayList<Transition> deltaE;
-    public int acceptingState;
+    public ArrayList<Integer> states = new ArrayList();
+    public ArrayList<Transition> delta = new ArrayList();
+    public ArrayList<Transition> deltaE = new ArrayList();
+    public ArrayList<Integer> acceptingStates = new ArrayList();
 
     public NFA(int numStates) {
-        this.states = new ArrayList();
-        this.delta = new ArrayList();
-        this.deltaE = new ArrayList();
-        this.acceptingState = 0;
+        this.acceptingStates.add(0);
 
         for (int i = 0; i < numStates; i++) {
             this.states.add(i);
@@ -20,16 +18,17 @@ public class NFA {
     }
 
     public NFA(char c) {
-        this.states = new ArrayList();
-        this.delta = new ArrayList();
-        this.deltaE = new ArrayList();
-        this.acceptingState = 1;
+        this.acceptingStates.add(1);
 
         for (int i = 0; i < 2; i++) {
             this.states.add(i);
         }
 
         this.delta.add(new Transition(0, 1, Optional.of(c)));
+    }
+
+    public NFA() {
+        this.acceptingStates.add(0);
     }
 
     public boolean accepts(int state, String inputStr, int pos) {
@@ -40,7 +39,7 @@ public class NFA {
                 if (accepts(transitions.get(i).stateTo, inputStr, pos))
                     return true;
             }
-            return state == acceptingState;
+            return acceptingStates.contains(state);
         }
 
         char c = inputStr.charAt(pos);
@@ -78,5 +77,45 @@ public class NFA {
         result.add("}");
 
         return result;
+    }
+
+    public void removeEpsilons() {
+        ArrayList<Integer> oldAcceptingStates = new ArrayList(acceptingStates);
+        acceptingStates.clear();
+        for (int i = 0; i < states.size(); i++) {
+            ArrayList<Integer> eClose = findEClose(i, new ArrayList<Integer>());
+            for (Integer state : oldAcceptingStates) {
+                if (eClose.contains(state)) {
+                    acceptingStates.add(i);
+                    break;
+                }
+            }
+
+            for (int j = 0; j < states.size(); j++) {
+                for (Integer state : eClose) {
+                    ArrayList<Transition> ts = new ArrayList(delta);
+                    int index = j;
+                    ts.removeIf(t -> t.stateFrom != state || t.stateTo != index);
+                    for (Transition t : ts) {
+                        delta.add(new Transition(i, j, t.symbol));
+                    }
+                }
+            }
+        }
+
+        deltaE.clear();
+    }
+
+    private ArrayList<Integer> findEClose(int state, ArrayList<Integer> states) {
+        List<Transition> transitions = new ArrayList(deltaE);
+        transitions.removeIf(t -> t.stateFrom != state);
+
+        for (Transition t : transitions) {
+            if (!states.contains(t.stateTo))
+                states.add(t.stateTo);
+            states = findEClose(t.stateTo, states);
+        }
+
+        return states;
     }
 }
