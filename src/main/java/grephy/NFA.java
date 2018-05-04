@@ -68,8 +68,15 @@ public class NFA {
     public List<String> toDotFile() {
         List<String> result = new ArrayList();
         result.add("digraph G {");
+        result.add("node [shape=circle];");
+        result.add("start [shape=none  label=\"\"]");
+        for (Integer state : acceptingStates) {
+            result.add(state + " [shape=doublecircle];");
+        }
+        result.add("start -> 0;");
         for (Transition t : delta) {
-            result.add(t.stateFrom + " -> " + t.stateTo + " [label=" + t.symbol.get() + "];");
+            String s = t.stateFrom + " -> " + t.stateTo + " [label=" + t.symbol.get() + "];";
+            result.add(s);
         }
         for (Transition t : deltaE) {
             result.add(t.stateFrom + " -> " + t.stateTo + " [label=\"&epsilon;\"];");
@@ -81,7 +88,6 @@ public class NFA {
 
     public void removeEpsilons() {
         ArrayList<Integer> oldAcceptingStates = new ArrayList(acceptingStates);
-        acceptingStates.clear();
         for (int i = 0; i < states.size(); i++) {
             ArrayList<Integer> eClose = findEClose(i, new ArrayList<Integer>());
             for (Integer state : oldAcceptingStates) {
