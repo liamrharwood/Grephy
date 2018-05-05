@@ -111,6 +111,22 @@ public class Grep {
                 e.printStackTrace();
             }
         }
+
+        DFA dfa = new DFA(nfa, alphabetList);
+
+        if (dfaFile.length() > 0) {
+            try {
+                PrintWriter dfaOut = new PrintWriter(dfaFile);
+                for (String line : dfa.toDotFile()) {
+                    dfaOut.println(line);
+                }
+                dfaOut.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+
     }
 
     private static void configureLogger() {
