@@ -6,6 +6,13 @@ import java.util.Stack;
 
 public class RegexConverter {
 
+    private enum OPERATOR {
+        CONCAT,
+        KLEENE,
+        UNION,
+        PARENTHESES
+    }
+
     private static NFA kleeneStar(NFA n) {
         NFA result = new NFA(n.states.size() + 2);
 
@@ -98,20 +105,28 @@ public class RegexConverter {
     }
 
     public static NFA nfaFromRegex(String regex, List<Character> alphabet) {
-        Stack<Character> operators = new Stack();
+        Stack<OPERATOR> operators = new Stack();
         Stack<NFA> operands = new Stack();
         Stack<NFA> concats = new Stack();
         boolean shouldConcat = false;
-        char op, c;
+        boolean charEscaped = false;
+        char c;
+        OPERATOR op;
         int numParentheses = 0;
         NFA nfa1, nfa2;
 
         for (int i = 0; i < regex.length(); i++) {
             c = regex.charAt(i);
-            if (alphabet.contains(c)) {
+            if (c == '\\') {
+                charEscaped = true;
+                c = regex.charAt(++i);
+            }
+
+            if (alphabet.contains(c) || charEscaped) {
+                charEscaped = false;
                 operands.push(new NFA(c));
                 if (shouldConcat) {
-                    operators.push('.');
+                    operators.push(OPERATOR.CONCAT);
                 } else {
                     shouldConcat = true;
                 }
@@ -125,18 +140,18 @@ public class RegexConverter {
                         numParentheses--;
                     }
 
-                    while (!operators.empty() && operators.peek() != '(') {
+                    while (!operators.empty() && operators.peek() != OPERATOR.PARENTHESES) {
                         op = operators.pop();
-                        if (op == '.') {
+                        if (op == OPERATOR.CONCAT) {
                             nfa2 = operands.pop();
                             nfa1 = operands.pop();
                             operands.push(concat(nfa1, nfa2));
-                        } else if (op == '|') {
+                        } else if (op == OPERATOR.UNION) {
                             nfa2 = operands.pop();
 
-                            if (!operators.empty() && operators.peek() == '.') {
+                            if (!operators.empty() && operators.peek() == OPERATOR.CONCAT) {
                                 concats.push(operands.pop());
-                                while (!operators.empty() && operators.peek() == '.') {
+                                while (!operators.empty() && operators.peek() == OPERATOR.CONCAT) {
                                     concats.push(operands.pop());
                                     operators.pop();
                                 }
@@ -155,13 +170,13 @@ public class RegexConverter {
                     shouldConcat = true;
                 } else if (c == '(') {
                     if (operands.size() > 0 && i < regex.length()-1 && regex.charAt(i + 1) != '(') {
-                        operators.push('.');
+                        operators.push(OPERATOR.CONCAT);
                     }
-                    operators.push(c);
+                    operators.push(OPERATOR.PARENTHESES);
                     numParentheses++;
                     shouldConcat = false;
                 } else if (c == '|') {
-                    operators.push(c);
+                    operators.push(OPERATOR.UNION);
                     shouldConcat = false;
                 }
             }
@@ -173,16 +188,16 @@ public class RegexConverter {
                 System.exit(1);
             }
             op = operators.pop();
-            if (op == '.') {
+            if (op == OPERATOR.CONCAT) {
                 nfa2 = operands.pop();
                 nfa1 = operands.pop();
                 operands.push(concat(nfa1, nfa2));
-            } else if (op == '|') {
+            } else if (op == OPERATOR.UNION) {
                 nfa2 = operands.pop();
 
-                if (!operators.empty() && operators.peek() == '.') {
+                if (!operators.empty() && operators.peek() == OPERATOR.CONCAT) {
                     concats.push(operands.pop());
-                    while (!operators.empty() && operators.peek() == '.') {
+                    while (!operators.empty() && operators.peek() == OPERATOR.CONCAT) {
                         concats.push(operands.pop());
                         operators.pop();
                     }

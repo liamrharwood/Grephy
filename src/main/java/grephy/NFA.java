@@ -72,11 +72,20 @@ public class NFA {
         result.add("node [shape=circle];");
         result.add("start [shape=none  label=\"\"]");
         for (Integer state : acceptingStates) {
-            result.add(state + " [shape=doublecircle];");
+            ArrayList<Transition> ts = new ArrayList(delta);
+            ts.removeIf(t -> t.stateTo != state);
+            if (state == 0 || !ts.isEmpty()) {
+                result.add(state + " [shape=doublecircle];");
+            }
         }
         result.add("start -> 0;");
         for (Transition t : delta) {
-            String s = t.stateFrom + " -> " + t.stateTo + " [label=\"" + t.symbol.get() + "\"];";
+            String s;
+            if (t.symbol.get() == '\\') {
+                s = t.stateFrom + " -> " + t.stateTo + " [label=\"\\\\\"];";
+            } else {
+                s = t.stateFrom + " -> " + t.stateTo + " [label=\"" + t.symbol.get() + "\"];";
+            }
             result.add(s);
         }
         for (Transition t : deltaE) {
