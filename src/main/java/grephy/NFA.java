@@ -2,6 +2,7 @@ package grephy;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class NFA {
     public ArrayList<Integer> states = new ArrayList();
@@ -106,6 +107,14 @@ public class NFA {
                         delta.add(new Transition(i, j, t.symbol));
                     }
                 }
+            }
+        }
+
+        for (int i = 1; i < states.size(); i++) {
+            ArrayList<Transition> ts = new ArrayList(delta);
+            int index = i;
+            if (ts.stream().filter(t -> t.stateTo == index).collect(Collectors.toList()).isEmpty()) {
+                delta.removeIf(t -> t.stateFrom == index);
             }
         }
 

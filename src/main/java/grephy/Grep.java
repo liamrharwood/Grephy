@@ -92,15 +92,13 @@ public class Grep {
         }
 
         NFA nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
+        nfa.removeEpsilons();
 
         for (String line : inputFileLines) {
             if (nfa.accepts(line)) {
                 System.out.println(line);
             }
         }
-
-        nfa.removeEpsilons();
-        //DFA dfa = new DFA(nfa, alphabetList);
 
         if (nfaFile.length() > 0) {
             try {
