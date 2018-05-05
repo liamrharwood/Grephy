@@ -76,7 +76,7 @@ public class NFA {
         }
         result.add("start -> 0;");
         for (Transition t : delta) {
-            String s = t.stateFrom + " -> " + t.stateTo + " [label=" + t.symbol.get() + "];";
+            String s = t.stateFrom + " -> " + t.stateTo + " [label=\"" + t.symbol.get() + "\"];";
             result.add(s);
         }
         for (Transition t : deltaE) {
