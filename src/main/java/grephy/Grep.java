@@ -10,6 +10,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Grep.java - The main class.
+ */
 public class Grep {
     private static final Logger LOGGER = Logger.getLogger(Grep.class);
 
@@ -24,15 +27,26 @@ public class Grep {
     private static List<String> inputFileLines;
     private static List<Character> alphabetList;
 
+    /**
+     * Usage: java grephy.Grep [-n NFA-FILE] [-d DFA-FILE] REGEX FILE
+     * Handles argument parsing and program functionality.
+     * Generates an NFA from REGEX, then converts it to a minimized DFA. Prints accepted strings (lines) from specified
+     * FILE at the end.
+     *
+     * @param args Program arguments
+     */
     public static void main (String[] args) {
+        // Logger setup
         configureLogger();
+        LOGGER.setLevel(Level.OFF);
 
+        // There must be at least a regex and input file, and at most those two plus optional args.
         if (args.length < 2 || args.length > 6) {
             System.out.println(USAGE_MESSAGE);
             System.exit(1);
         }
 
-        // Handle optional arguments specifying NFA and DFA output files
+        // Handle optional arguments specifying NFA and DFA output files (order does not matter)
         int i;
         for (i = 0; i < 4 && args[i].charAt(0) == '-'; i++) {
             switch (args[i].charAt(1)) {
@@ -75,6 +89,33 @@ public class Grep {
             System.exit(1);
         }
 
+        learnAlphabet();
+
+        // Create a simplified NFA from the regex
+        NFA nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
+        nfa.removeEpsilons();
+
+        outputDotFile(nfa, nfaFile);
+
+        DFA dfa = new DFA(nfa, alphabetList);
+
+        outputDotFile(dfa, dfaFile);
+
+        // Output matching lines from the input file
+        for (String line : inputFileLines) {
+            if (nfa.accepts(line)) {
+                System.out.println(line);
+            }
+        }
+
+
+    }
+
+    /**
+     * Learns the alphabet from the input file.
+     */
+    private static void learnAlphabet() {
+        // Attempt to read lines from the input file
         try {
             inputFileLines = Files.readAllLines(Paths.get(inputFile));
         } catch (IOException e) {
@@ -82,6 +123,7 @@ public class Grep {
             System.exit(1);
         }
 
+        // Get all unique characters from the file
         alphabetList = new ArrayList();
         for (String line : inputFileLines) {
             for (char symbol : line.toCharArray()) {
@@ -90,45 +132,32 @@ public class Grep {
                 }
             }
         }
+    }
 
-        NFA nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
-        nfa.removeEpsilons();
-
-        for (String line : inputFileLines) {
-            if (nfa.accepts(line)) {
-                System.out.println(line);
-            }
-        }
-
-        if (nfaFile.length() > 0) {
+    /**
+     * Outputs a DOT language format file to the specified filename.
+     *
+     * @param nfa NFA (or DFA) to generate
+     * @param file Output filename
+     */
+    private static void outputDotFile(NFA nfa, String file) {
+        if (file.length() > 0) { // If the filename was specified
             try {
-                PrintWriter nfaOut = new PrintWriter(nfaFile);
+                PrintWriter nfaOut = new PrintWriter(file);
                 for (String line : nfa.toDotFile()) {
                     nfaOut.println(line);
                 }
                 nfaOut.close();
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                LOGGER.error(e);
+                System.exit(1);
             }
         }
-
-        DFA dfa = new DFA(nfa, alphabetList);
-
-        if (dfaFile.length() > 0) {
-            try {
-                PrintWriter dfaOut = new PrintWriter(dfaFile);
-                for (String line : dfa.toDotFile()) {
-                    dfaOut.println(line);
-                }
-                dfaOut.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-
     }
 
+    /**
+     * Set up the Log4j logger.
+     */
     private static void configureLogger() {
         ConsoleAppender console = new ConsoleAppender();
 
