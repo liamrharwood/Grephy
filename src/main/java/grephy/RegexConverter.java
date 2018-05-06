@@ -8,7 +8,6 @@ public class RegexConverter {
 
     private enum OPERATOR {
         CONCAT,
-        KLEENE,
         UNION,
         PARENTHESES
     }

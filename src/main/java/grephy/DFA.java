@@ -1,6 +1,5 @@
 package grephy;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class DFA extends NFA {
