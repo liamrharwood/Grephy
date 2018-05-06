@@ -2,6 +2,7 @@ package grephy;
 
 import org.apache.log4j.*;
 
+import javax.xml.bind.ValidationException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -92,7 +93,14 @@ public class Grep {
         learnAlphabet();
 
         // Create a simplified NFA from the regex
-        NFA nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
+        NFA nfa = null;
+        try {
+            nfa = RegexConverter.nfaFromRegex(regexString, alphabetList);
+        } catch (ValidationException e) {
+            LOGGER.error(e);
+            System.out.println("Invalid regex: " + e.getMessage());
+            System.exit(1);
+        }
         nfa.removeEpsilons();
 
         outputDotFile(nfa, nfaFile);
@@ -120,6 +128,7 @@ public class Grep {
             inputFileLines = Files.readAllLines(Paths.get(inputFile));
         } catch (IOException e) {
             LOGGER.error(e);
+            System.out.println("Unable to read file " + inputFile + ".");
             System.exit(1);
         }
 
@@ -150,6 +159,7 @@ public class Grep {
                 nfaOut.close();
             } catch (FileNotFoundException e) {
                 LOGGER.error(e);
+                System.out.println("Unable to write to file " + file + ".");
                 System.exit(1);
             }
         }

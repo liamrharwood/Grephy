@@ -1,5 +1,6 @@
 package grephy;
 
+import javax.xml.bind.ValidationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
@@ -103,7 +104,7 @@ public class RegexConverter {
         return result;
     }
 
-    public static NFA nfaFromRegex(String regex, List<Character> alphabet) {
+    public static NFA nfaFromRegex(String regex, List<Character> alphabet) throws ValidationException {
         Stack<OPERATOR> operators = new Stack();
         Stack<NFA> operands = new Stack();
         Stack<NFA> concats = new Stack();
@@ -133,8 +134,7 @@ public class RegexConverter {
                 if (c == ')') {
                     shouldConcat = true;
                     if (numParentheses == 0) {
-                        // error
-                        System.exit(1);
+                        throw new ValidationException("Mismatched parentheses in regex.");
                     } else {
                         numParentheses--;
                     }
@@ -168,7 +168,8 @@ public class RegexConverter {
                     operands.push(kleeneStar(operands.pop()));
                     shouldConcat = true;
                 } else if (c == '(') {
-                    if (operands.size() > 0 && i < regex.length()-1 && regex.charAt(i + 1) != '(') {
+                    if (operands.size() > 0 && i < regex.length()-1
+                            && regex.charAt(i + 1) != '(' && regex.charAt(i - 1) != '|') {
                         operators.push(OPERATOR.CONCAT);
                     }
                     operators.push(OPERATOR.PARENTHESES);
@@ -182,9 +183,8 @@ public class RegexConverter {
         }
 
         while (operators.size() > 0) {
-            if (operands.empty()) {
-                //error
-                System.exit(1);
+            if (operands.size() < 2) {
+                throw new ValidationException("Operator missing operand.");
             }
             op = operators.pop();
             if (op == OPERATOR.CONCAT) {
