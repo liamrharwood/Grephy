@@ -5,14 +5,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
+/**
+ * RegexConverter.java - Handles converting regex to NFA.
+ */
 public class RegexConverter {
 
+    /**
+     * Represents the different regex operators
+     */
     private enum OPERATOR {
         CONCAT,
-        UNION,
-        PARENTHESES
+        UNION, // |
+        PARENTHESES // (
     }
 
+    /**
+     * Creates an NFA that cycles an input NFA 0 or more times
+     *
+     * @param n NFA to repeat
+     * @return The kleene closure of n
+     */
     private static NFA kleeneStar(NFA n) {
         NFA result = new NFA(n.states.size() + 2);
 
@@ -40,6 +52,13 @@ public class RegexConverter {
         return result;
     }
 
+    /**
+     * Creates a new NFA that is the concatenation of two input NFAs
+     *
+     * @param n The first NFA to concat
+     * @param m The second NFA to concat
+     * @return The concatenation of n and m
+     */
     private static NFA concat(NFA n, NFA m) {
         m.states.remove(0);
 
@@ -64,6 +83,13 @@ public class RegexConverter {
         return n;
     }
 
+    /**
+     * Creates a branching NFA that branches between two input NFAs
+     *
+     * @param n The first possible NFA to branch to
+     * @param m The second possible NFA to branch to
+     * @return The union of n and m
+     */
     private static NFA union(NFA n, NFA m) {
         NFA result = new NFA(n.states.size() + m.states.size() + 2);
 
@@ -104,14 +130,22 @@ public class RegexConverter {
         return result;
     }
 
+    /**
+     * Converts a regular expression string (in grep format) to an NFA.
+     *
+     * @param regex Regular expression string
+     * @param alphabet Alphabet to be used in the NFA
+     * @return The created NFA
+     * @throws ValidationException if the regex is not formatted correctly
+     */
     public static NFA nfaFromRegex(String regex, List<Character> alphabet) throws ValidationException {
-        Stack<OPERATOR> operators = new Stack();
-        Stack<NFA> operands = new Stack();
-        Stack<NFA> concats = new Stack();
-        boolean shouldConcat = false;
-        boolean charEscaped = false;
-        char c;
-        OPERATOR op;
+        Stack<OPERATOR> operators = new Stack(); // Operators get added to the top as they are read and popped off when used
+        Stack<NFA> operands = new Stack(); // Operand NFAs are added to the top and popped off when operators are used
+        Stack<NFA> concats = new Stack(); // NFAs being concatenated together
+        boolean shouldConcat = false; // Should the next operand be concatenated?
+        boolean charEscaped = false; // Was backslash used to indicate an escaped character?
+        char c; // Current character
+        OPERATOR op; // Current operator
         int numParentheses = 0;
         NFA nfa1, nfa2;
 
@@ -122,7 +156,7 @@ public class RegexConverter {
                 c = regex.charAt(++i);
             }
 
-            if (alphabet.contains(c) || charEscaped) {
+            if (alphabet.contains(c) || charEscaped) { // If not an operator, or an escaped character of any kind
                 charEscaped = false;
                 operands.push(new NFA(c));
                 if (shouldConcat) {
@@ -139,6 +173,7 @@ public class RegexConverter {
                         numParentheses--;
                     }
 
+                    // Handle groupings of operators denoted by parentheses (work backwards until open paren)
                     while (!operators.empty() && operators.peek() != OPERATOR.PARENTHESES) {
                         op = operators.pop();
                         if (op == OPERATOR.CONCAT) {
@@ -182,6 +217,7 @@ public class RegexConverter {
             }
         }
 
+        // Go through remaining operators and perform operations as needed
         while (operators.size() > 0) {
             if (operands.size() < 2) {
                 throw new ValidationException("Operator missing operand.");
@@ -211,6 +247,7 @@ public class RegexConverter {
             }
         }
 
+        // The completed NFA will be at the top of the operand stack
         return operands.pop();
     }
 
