@@ -1,9 +1,0 @@
-digraph G {
-node [shape=circle];
-start [shape=none  label=""]
-2 [shape=doublecircle];
-4 [shape=doublecircle];
-start -> 0;
-0 -> 2 [label="a"];
-0 -> 4 [label="b"];
-}
