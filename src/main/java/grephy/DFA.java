@@ -2,9 +2,19 @@ package grephy;
 
 import java.util.*;
 
+/**
+ * DFA.java - Represents a deterministic finite automaton.
+ */
 public class DFA extends NFA {
+    // Subsets for each state during subset construction; indices correspond to state list indices
     ArrayList<Set<Integer>> stateSubsets = new ArrayList();
 
+    /**
+     * Constructs a DFA from a given NFA and alphabet using subset construction.
+     *
+     * @param nfa
+     * @param alphabet
+     */
     public DFA (NFA nfa, List<Character> alphabet) {
         // Create initial state
         states.add(0);
@@ -18,14 +28,16 @@ public class DFA extends NFA {
                 List<Transition> cTransitions = new ArrayList(nfa.delta);
                 int index = i;
                 cTransitions.removeIf(t -> !stateSubsets.get(index).contains(t.stateFrom)
-                        || t.symbol.get() != c);
+                        || t.symbol.get() != c); // Get transitions coming from a state in current subset on c
                 HashSet<Integer> toStates = new HashSet();
+                // Determine subset of possible next states
                 for (Transition transition : cTransitions) {
                     toStates.add(transition.stateTo);
                 }
 
                 boolean flag = false;
                 for (int j = 0; j < states.size(); j++) {
+                    // If the subsets match, create a transition between them
                     if (toStates.containsAll(stateSubsets.get(j)) && stateSubsets.get(j).containsAll(toStates)) {
                         delta.add(new Transition(i, j, Optional.of(c)));
                         flag = true;
@@ -33,6 +45,7 @@ public class DFA extends NFA {
                     }
                 }
 
+                // If no match was found, create a new state using the subset of possible next states
                 if (!flag) {
                     states.add(states.size() - 1);
                     delta.add(new Transition(i, states.size() - 1, Optional.of(c)));
@@ -44,6 +57,7 @@ public class DFA extends NFA {
         }
 
         acceptingStates.clear();
+        // Determine the new accepting states from subsets containing NFA accepting states
         for (i = 0; i < states.size(); i++) {
             for (Integer state : nfa.acceptingStates) {
                 if (stateSubsets.get(i).contains(state)) {
@@ -56,8 +70,13 @@ public class DFA extends NFA {
         minimize(alphabet);
     }
 
+    /**
+     * Minimizes the DFA using Hopcroft's algorithm (https://en.wikipedia.org/wiki/DFA_minimization#Hopcroft's_algorithm)
+     *
+     * @param alphabet DFA alphabet
+     */
     private void minimize(List<Character> alphabet) {
-        ArrayList<ArrayList<Integer>> partitions = new ArrayList();
+        ArrayList<ArrayList<Integer>> partitions = new ArrayList(); // Equivalence classes (called P in Hopcroft)
         partitions.add(new ArrayList(acceptingStates));
         partitions.add(new ArrayList());
         for (int i = 0; i < states.size(); i++) {
@@ -66,51 +85,50 @@ public class DFA extends NFA {
             }
         }
 
-        ArrayList<ArrayList<Integer>> waiting = new ArrayList();
+        ArrayList<ArrayList<Integer>> waiting = new ArrayList(); // Partitions to examine (called W in Hopcroft)
         waiting.add(new ArrayList(acceptingStates));
         while (!waiting.isEmpty()) {
-            ArrayList<Integer> A = waiting.remove(0);
+            ArrayList<Integer> A = waiting.remove(0); // Choose set from W
             for (Character c : alphabet) {
-                //let X be the set of states for which a transition on c leads to a state in A
-                HashSet<Integer> X = new HashSet();
-                for (Integer state : states) {
-                    ArrayList<Transition> ts = new ArrayList(delta);
-                    ts.removeIf(t -> t.symbol.get() != c || !A.contains(t.stateTo));
-                    for (Transition t : ts) {
-                        X.add(t.stateFrom);
-                    }
+                HashSet<Integer> X = new HashSet(); // Set of states for which a transition on c leads to a state in A
+                ArrayList<Transition> ts = new ArrayList(delta);
+                ts.removeIf(t -> t.symbol.get() != c || !A.contains(t.stateTo));
+                for (Transition t : ts) {
+                    X.add(t.stateFrom);
                 }
+
 
                 int i = 0;
                 while (i < partitions.size()) {
                     ArrayList<Integer> Y = new ArrayList(partitions.get(i));
-                    ArrayList<Integer> X2 = new ArrayList(X);
-                    X2.retainAll(Y);
-                    ArrayList<Integer> Y2 = new ArrayList(Y);
-                    Y2.removeAll(X);
-                    if (!X2.isEmpty() && !Y2.isEmpty()) {
-                        partitions.remove(i);
-                        partitions.add(X2);
-                        partitions.add(Y2);
+                    ArrayList<Integer> xUnionY = new ArrayList(X); // X U Y
+                    xUnionY.retainAll(Y);
+                    ArrayList<Integer> ySubtractX = new ArrayList(Y); // X \ Y
+                    ySubtractX.removeAll(X);
+                    if (!xUnionY.isEmpty() && !ySubtractX.isEmpty()) {
+                        partitions.remove(i); // Replace Y in P by the two sets X ∩ Y and Y \ X
+                        partitions.add(xUnionY);
+                        partitions.add(ySubtractX);
 
                         boolean flag = false;
                         int j = 0;
                         while (j < waiting.size()) {
                             HashSet<Integer> set = new HashSet(waiting.get(j));
-                            if (set.containsAll(Y) && Y.containsAll(set)) {
-                                waiting.remove(j);
-                                waiting.add(X2);
-                                waiting.add(Y2);
+                            if (set.containsAll(Y) && Y.containsAll(set)) { // If Y is in W
+                                waiting.remove(j); // Replace Y in W by the two sets X ∩ Y and Y \ X
+                                waiting.add(xUnionY);
+                                waiting.add(ySubtractX);
                                 flag = true;
                                 break;
                             }
                             j++;
                         }
+                        // If Y is not in W
                         if (!flag) {
-                            if (X2.size() <= Y2.size()) {
-                                waiting.add(X2);
+                            if (xUnionY.size() <= ySubtractX.size()) {
+                                waiting.add(xUnionY);
                             } else {
-                                waiting.add(Y2);
+                                waiting.add(ySubtractX);
                             }
                         }
                     }
@@ -122,21 +140,29 @@ public class DFA extends NFA {
         mergeStates(partitions, alphabet);
     }
 
+    /**
+     * Turns equivalence classes found by Hopcroft's algorithms into new states to finalize minimization
+     *
+     * @param partitions Equivalence classes found by Hopcroft's algorithm
+     * @param alphabet DFA alphabet
+     */
     private void mergeStates(List<ArrayList<Integer>> partitions, List<Character> alphabet) {
         ArrayList<Integer> newStates = new ArrayList();
         ArrayList<Transition> newDelta = new ArrayList();
         ArrayList<Integer> newAcceptingStates = new ArrayList();
 
+        // Move the partition containing the initial state to the first index
         int i = 0;
         while (i < partitions.size()) {
-            if (partitions.get(i).contains(0)) {
-                partitions.add(0, partitions.get(i));
+            if (partitions.get(i).contains(INITIAL_STATE)) {
+                partitions.add(INITIAL_STATE, partitions.get(i));
                 partitions.remove(i+1);
                 break;
             }
             i++;
         }
 
+        // Determine which partitions contain accepting states and create new corresponding accepting states
         for (i = 0; i < partitions.size(); i++) {
             for (int j = 0; j < partitions.get(i).size(); j++) {
                 if (acceptingStates.contains(partitions.get(i).get(j))) {
@@ -147,6 +173,7 @@ public class DFA extends NFA {
             newStates.add(i);
         }
 
+        // Create transitions between partitions that have transitions between the states they contain
         for (i = 0; i < newStates.size(); i++) {
             Integer s = partitions.get(i).get(0);
             for (Character c : alphabet) {

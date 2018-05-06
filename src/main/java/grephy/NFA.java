@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * NFA.java - Represents a nondeterministic finite automata.
+ * NFA.java - Represents a nondeterministic finite automaton.
  */
 public class NFA {
 
@@ -13,7 +13,7 @@ public class NFA {
     public ArrayList<Transition> deltaE = new ArrayList(); // State transitions on epsilon (empty string)
     public ArrayList<Integer> acceptingStates = new ArrayList();
 
-    private final int INITIAL_STATE = 0; // The first index of states is always the initial state (for simplicity)
+    protected final int INITIAL_STATE = 0; // The first index of states is always the initial state (for simplicity)
 
     /**
      * Constructs an NFA with a specified number of states and no transitions.
